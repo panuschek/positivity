@@ -16,6 +16,27 @@ export function isAvailable() {
   return r.status === 0;
 }
 
+// Beim Kopieren aus dem Terminal landen oft Zeilenumbrüche/Leerzeichen im Token → entfernen.
+// Ein leerer ANTHROPIC_API_KEY (fehlendes Secret in CI) wird nicht weitergereicht.
+function childEnv() {
+  const env = { ...process.env };
+  if (env.CLAUDE_CODE_OAUTH_TOKEN) env.CLAUDE_CODE_OAUTH_TOKEN = env.CLAUDE_CODE_OAUTH_TOKEN.replace(/\s+/g, '');
+  if (!env.ANTHROPIC_API_KEY) delete env.ANTHROPIC_API_KEY;
+  return env;
+}
+
+// Prüft das Token-Format, ohne den Token selbst auszugeben
+export function describeToken() {
+  const raw = process.env.CLAUDE_CODE_OAUTH_TOKEN;
+  if (!raw) return 'kein CLAUDE_CODE_OAUTH_TOKEN gesetzt (lokaler Login wird verwendet)';
+  const t = raw.replace(/\s+/g, '');
+  const notes = [];
+  if (t !== raw) notes.push(`${raw.length - t.length} Leerzeichen/Zeilenumbrüche entfernt`);
+  if (!t.startsWith('sk-ant-oat')) notes.push('beginnt NICHT mit "sk-ant-oat" – falscher Wert im Secret?');
+  const prefix = t.startsWith('sk-ant-') ? `${t.slice(0, 13)}…` : '(Präfix ausgeblendet)';
+  return `Token: ${prefix}, ${t.length} Zeichen${notes.length ? ' – ' + notes.join('; ') : ''}`;
+}
+
 function run(input, timeoutMs = 5 * 60 * 1000) {
   return new Promise((resolve, reject) => {
     const args = [
@@ -29,7 +50,7 @@ function run(input, timeoutMs = 5 * 60 * 1000) {
       '--no-session-persistence',
     ];
     // Neutrales Arbeitsverzeichnis, damit keine Projekt-Einstellungen geladen werden
-    const child = spawn(BIN, args, { cwd: tmpdir(), stdio: ['pipe', 'pipe', 'pipe'] });
+    const child = spawn(BIN, args, { cwd: tmpdir(), env: childEnv(), stdio: ['pipe', 'pipe', 'pipe'] });
     let stdout = '';
     let stderr = '';
     const timer = setTimeout(() => {

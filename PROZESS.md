@@ -139,6 +139,7 @@ Vorgabe: *simpel, fröhlich, minimalistisch, künstlerisch.* Umsetzung durch die
 | In CI gibt es keinen interaktiven Login für die Claude-CLI | Token via `claude setup-token`; ohne Token wird automatisch auf API bzw. Schlagwörter ausgewichen |
 | Spaltenlayout (Masonry) zerstörte die zeitliche Reihenfolge | Umstellung auf zeilenweises Grid |
 | Erster Lauf in GitHub Actions: einzelne Stapel scheiterten mit „claude beendet mit Code 1“, die eigentliche Ursache war im Log abgeschnitten | Die KI hat den Fehler lokal mit einem ungültigen Token nachgestellt: Die CLI schreibt den Grund in das JSON-Feld `result`/`api_error_status`. Jetzt: verständliche Fehlermeldung, bei 401 sofortiger Abbruch mit Hinweis auf `claude setup-token`, bei Rate-Limit (429)/Überlastung bis zu 3 neue Versuche mit Wartezeit, nur noch 2 parallele Aufrufe |
+| Vollständiges Log: alle 15 Stapel scheiterten sofort (`duration_api_ms: 0`) | Die KI hat das Muster lokal exakt nachgestellt: Es ist ein **ungültiger OAuth-Token (HTTP 401)**, kein Rate-Limit. Häufigste Ursache: Der lange Token wird im Terminal umgebrochen und mit Zeilenumbrüchen kopiert. Jetzt werden Leerzeichen/Umbrüche automatisch entfernt und das Log zeigt Präfix und Länge des Tokens (nie den Token selbst) |
 
 ## Offene Punkte / Ideen
 

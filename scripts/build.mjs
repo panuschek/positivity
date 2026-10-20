@@ -58,6 +58,7 @@ async function main() {
   const cache = await readJson(CACHE_FILE, { articles: {} });
   const classifier = pickClassifier();
   log(`Klassifizierer: ${classifier.name}`);
+  if (classifier === claudeCli) log(claudeCli.describeToken());
 
   // 1. Feeds laden
   const now = Date.now();
