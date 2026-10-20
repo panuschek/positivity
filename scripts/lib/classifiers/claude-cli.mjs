@@ -44,20 +44,49 @@ function run(input, timeoutMs = 5 * 60 * 1000) {
     });
     child.on('close', (code) => {
       clearTimeout(timer);
-      if (code !== 0) return reject(new Error(`claude beendet mit Code ${code}: ${(stderr || stdout).slice(0, 500)}`));
+      let res;
       try {
-        resolve(JSON.parse(stdout));
+        res = JSON.parse(stdout);
       } catch {
-        reject(new Error(`Antwort der Claude-CLI ist kein JSON: ${stdout.slice(0, 300)}`));
+        return reject(new Error(`claude beendet mit Code ${code}: ${(stderr || stdout).slice(0, 500)}`));
       }
+      // Fehler stecken im JSON (Feld "result" + "api_error_status"), nicht in stderr
+      if (code !== 0 || res.is_error) return reject(cliError(res));
+      resolve(res);
     });
     child.stdin.end(input);
   });
 }
 
+function cliError(res) {
+  const status = res.api_error_status;
+  const msg = String(res.result ?? res.subtype ?? 'unbekannter Fehler').slice(0, 300);
+  const err = new Error(`Claude-CLI-Fehler${status ? ` (HTTP ${status})` : ''}: ${msg}`);
+  err.status = status;
+  if (status === 401 || status === 403 || /authenticat|login/i.test(msg)) {
+    err.fatal = true;
+    err.message += ' → Token ungültig oder abgelaufen? Lokal `claude setup-token` ausführen und das Secret CLAUDE_CODE_OAUTH_TOKEN neu setzen.';
+  }
+  return err;
+}
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
 export async function classifyBatch(batch) {
-  const res = await run(buildUserMessage(batch));
-  if (res.is_error) throw new Error(`Claude-CLI meldet Fehler: ${res.result?.slice?.(0, 300)}`);
+  // Bei Rate-Limits (429) oder Überlastung (5xx/529) mit wachsender Wartezeit erneut versuchen
+  let res;
+  for (let attempt = 1; ; attempt++) {
+    try {
+      res = await run(buildUserMessage(batch));
+      break;
+    } catch (e) {
+      const retryable = !e.fatal && (e.status === 429 || e.status >= 500 || /rate|overload|limit/i.test(e.message));
+      if (!retryable || attempt >= 4) throw e;
+      const wait = 15000 * 2 ** (attempt - 1);
+      console.log(`    … ${e.message.slice(0, 120)} – neuer Versuch in ${wait / 1000} s`);
+      await sleep(wait);
+    }
+  }
   let data = res.structured_output;
   if (!data && typeof res.result === 'string') {
     try {

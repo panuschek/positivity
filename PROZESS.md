@@ -138,6 +138,7 @@ Vorgabe: *simpel, fröhlich, minimalistisch, künstlerisch.* Umsetzung durch die
 | Feed-Texte enthalten HTML, Entities und Floskeln („The post … appeared first on …“) | Bereinigung in `stripHtml()` |
 | In CI gibt es keinen interaktiven Login für die Claude-CLI | Token via `claude setup-token`; ohne Token wird automatisch auf API bzw. Schlagwörter ausgewichen |
 | Spaltenlayout (Masonry) zerstörte die zeitliche Reihenfolge | Umstellung auf zeilenweises Grid |
+| Erster Lauf in GitHub Actions: einzelne Stapel scheiterten mit „claude beendet mit Code 1“, die eigentliche Ursache war im Log abgeschnitten | Die KI hat den Fehler lokal mit einem ungültigen Token nachgestellt: Die CLI schreibt den Grund in das JSON-Feld `result`/`api_error_status`. Jetzt: verständliche Fehlermeldung, bei 401 sofortiger Abbruch mit Hinweis auf `claude setup-token`, bei Rate-Limit (429)/Überlastung bis zu 3 neue Versuche mit Wartezeit, nur noch 2 parallele Aufrufe |
 
 ## Offene Punkte / Ideen
 

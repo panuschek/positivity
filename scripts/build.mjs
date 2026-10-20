@@ -3,6 +3,7 @@
 // Umgebungsvariablen:
 //   CLASSIFIER   auto | claude-cli | anthropic-api | keywords   (Standard: auto)
 //   BATCH_SIZE   Artikel pro KI-Aufruf (Standard: 40)
+//   CONCURRENCY  gleichzeitige KI-Aufrufe (Standard: 2)
 //   MAX_NEW      max. neu zu bewertende Artikel pro Lauf (Standard: 600)
 //   MAX_AGE_H    Artikel älter als X Stunden werden ignoriert (Standard: 48)
 //   KEEP_DAYS    so lange bleiben positive Artikel auf der Seite (Standard: 3)
@@ -20,6 +21,7 @@ const OUT_FILE = join(ROOT, 'public', 'news.json');
 
 const env = (k, d) => process.env[k] ?? d;
 const BATCH_SIZE = Number(env('BATCH_SIZE', 40));
+const CONCURRENCY = Number(env('CONCURRENCY', 2));
 const MAX_NEW = Number(env('MAX_NEW', 600));
 const MAX_AGE_H = Number(env('MAX_AGE_H', 48));
 const KEEP_DAYS = Number(env('KEEP_DAYS', 3));
@@ -101,7 +103,9 @@ async function main() {
   const batches = [];
   for (let i = 0; i < todo.length; i += BATCH_SIZE) batches.push(todo.slice(i, i + BATCH_SIZE));
   let failed = 0;
-  await mapLimit(batches, classifier.name === 'keywords' ? 1 : 3, async (batch, i) => {
+  let fatal = null;
+  await mapLimit(batches, classifier.name === 'keywords' ? 1 : CONCURRENCY, async (batch, i) => {
+    if (fatal) return; // z. B. ungültiger Token – weitere Aufrufe sind zwecklos
     try {
       const results = await classifier.classifyBatch(batch);
       for (const a of batch) {
@@ -119,9 +123,12 @@ async function main() {
       log(`  Stapel ${i + 1}/${batches.length}: ${pos} von ${batch.length} positiv`);
     } catch (e) {
       failed++;
+      if (e.fatal) fatal = e;
       log(`  ⚠ Stapel ${i + 1}/${batches.length} fehlgeschlagen: ${e.message}`);
     }
   });
+  if (fatal) throw new Error(`Abbruch: ${fatal.message}`);
+  if (failed) log(`${failed} von ${batches.length} Stapeln fehlgeschlagen – diese Artikel werden beim nächsten Lauf erneut bewertet.`);
   if (batches.length && failed === batches.length) {
     throw new Error('Alle Bewertungs-Aufrufe sind fehlgeschlagen – Abbruch, news.json bleibt unverändert.');
   }
