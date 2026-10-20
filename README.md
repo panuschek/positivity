@@ -59,6 +59,10 @@ Weitere Einstellungen über Umgebungsvariablen: `CLAUDE_MODEL` (Standard `haiku`
    ```
    Den ausgegebenen Token unter **Settings → Secrets and variables → Actions** als Secret
    `CLAUDE_CODE_OAUTH_TOKEN` speichern. (Alternativ: Secret `ANTHROPIC_API_KEY` für die API.)
+
+   > ⚠ Achtung: Der Code, den der Browser beim Login anzeigt, ist **nicht** der Token. Erst
+   > nachdem dieser Code im Terminal eingefügt wurde, gibt das Terminal den eigentlichen Token
+   > aus. Er beginnt mit `sk-ant-oat01-`. Das Build-Log prüft das Format (Zeile „Token: …“).
 4. Unter **Actions → „Gute Nachrichten aktualisieren“ → Run workflow** den ersten Lauf starten.
 
 Danach aktualisiert sich die Seite automatisch alle 3 Stunden. Jeder Lauf verbraucht einen kleinen
