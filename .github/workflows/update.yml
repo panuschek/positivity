@@ -1,0 +1,72 @@
+name: Gute Nachrichten aktualisieren
+
+on:
+  schedule:
+    - cron: '17 */3 * * *' # alle 3 Stunden
+  workflow_dispatch: # manuell auslösbar
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Claude Code CLI installieren
+        run: npm install -g @anthropic-ai/claude-code
+
+      # Bereits bewertete Artikel aus dem letzten Lauf wiederverwenden (spart KI-Aufrufe)
+      - name: Bewertungs-Cache laden
+        uses: actions/cache/restore@v4
+        with:
+          path: data/cache.json
+          key: news-cache-${{ github.run_id }}
+          restore-keys: news-cache-
+
+      - name: Nachrichten laden und filtern
+        run: npm run build
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CLASSIFIER: ${{ vars.CLASSIFIER || 'auto' }}
+
+      - name: Bewertungs-Cache speichern
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: data/cache.json
+          key: news-cache-${{ github.run_id }}
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

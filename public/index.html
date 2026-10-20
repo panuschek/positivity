@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gute Nachrichten</title>
+  <meta name="description" content="Nur gute Nachrichten. Ich mach mir die Welt, wie sie mir gefällt.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..800,100,1;1,9..144,300..800,100,1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="masthead">
+    <svg class="sun" viewBox="0 0 120 120" aria-hidden="true">
+      <g class="rays">
+        <path d="M60 4v14M60 102v14M4 60h14M102 60h14M20.4 20.4l9.9 9.9M89.7 89.7l9.9 9.9M20.4 99.6l9.9-9.9M89.7 30.3l9.9-9.9" />
+      </g>
+      <circle cx="60" cy="60" r="27" />
+      <path class="smile" d="M49 64q11 10 22 0" />
+      <circle class="eye" cx="51" cy="54" r="2.6" />
+      <circle class="eye" cx="69" cy="54" r="2.6" />
+    </svg>
+    <h1>Gute <em>Nachrichten</em></h1>
+    <p class="motto">Ich mach mir die Welt, wie sie mir gefällt.</p>
+
+    <div class="controls">
+      <p class="today" id="today"></p>
+      <label class="switch">
+        <input type="checkbox" id="global-toggle">
+        <span class="track" aria-hidden="true"><span class="thumb"></span></span>
+        <span class="switch-label">Auch internationale Quellen</span>
+      </label>
+    </div>
+  </header>
+
+  <main>
+    <div class="feed" id="feed" aria-live="polite">
+      <p class="state">Einen Moment, die guten Nachrichten werden gesammelt …</p>
+    </div>
+  </main>
+
+  <footer class="colophon">
+    <p>
+      Diese Seite liest regelmäßig die Nachrichten großer Medien und lässt eine KI jede Meldung bewerten.
+      Gezeigt wird nur, was eindeutig erfreulich ist – alles andere bleibt draußen.
+    </p>
+    <p class="updated" id="updated"></p>
+    <details>
+      <summary>Unsere Quellen</summary>
+      <div class="source-lists" id="sources"></div>
+    </details>
+    <p class="small">Ein Uni-Projekt. Alle Artikel gehören den jeweiligen Redaktionen und sind dort verlinkt.</p>
+  </footer>
+
+  <script src="app.js" type="module"></script>
+</body>
+</html>
