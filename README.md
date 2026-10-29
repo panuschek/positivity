@@ -7,6 +7,8 @@ großer Medien (`sources.json`). Eine KI (Claude) bewertet jede Meldung, und auf
 was eindeutig erfreulich ist. Standardmäßig werden nur **deutsche Quellen** angezeigt, internationale
 Quellen lassen sich per Schalter dazunehmen (deren Meldungen werden ins Deutsche übersetzt).
 
+**Live-Seite:** https://panuschek.github.io/positivity/ (wird von GitHub Actions alle 3 Stunden neu gebaut)
+
 Uni-Projekt – der Entstehungsprozess mit KI ist in [`PROZESS.md`](PROZESS.md) dokumentiert.
 
 ## Aufbau
